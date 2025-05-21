@@ -1,0 +1,10 @@
+# requirements.txt
+#
+# This file lists the Python packages required to run the Homebox API client
+# and its examples.
+#
+# To install these dependencies, run:
+# pip install -r requirements.txt
+
+requests>=2.32.0
+keyring>=25.2.1
