@@ -49,15 +49,28 @@ A Python client library for interacting with the [Homebox](https://hay-kot.githu
 
 ## Setup
 
-1.  **Configure the API Base URL:**
-    Open the `includes/homebox_api.py` file. Locate the line defining `API_BASE_URL` and replace the placeholder URL with the actual URL of your Homebox instance's API.
+1.  **Configure the Application using `config.ini`:**
+    The application now uses a dedicated configuration file, `config.ini`, located in the same directory as the `includes/homebox_api.py` file. You need to create this file and populate it with your Homebox instance's API details.
 
-    ```python
-    class HomeboxAPI:
-        # Replace with the actual URL of your Homebox instance's API
-        # Example: "http://your_homebox_[instance.com/api/v1](https://instance.com/api/v1)" or "http://localhost:3100/api/v1"
-        API_BASE_URL = "http://YOUR_HOMEBOX_SERVER_URL/api/v1" # <-- Modify this line
-        # ... rest of the class
+    a.  **Create `config.ini`:** If it doesn't already exist, create a file named `config.ini` in the same directory as your `includes/homebox_api.py` file.
+
+    b.  **Edit `config.ini`:** Open `config.ini` and add the following content, replacing the placeholder values with your actual Homebox API URL and a service name:
+
+    ```ini
+    [API]
+    base_url = http://your_homebox_server_address/api/v1
+    service_name = YourServiceName
+    ```
+
+    * **`base_url`**: Replace `http://your_homebox_server_address/api/v1` with the actual URL of your Homebox instance's API (e.g., `http://your_homebox.instance.com/api/v1` or `http://localhost:3100/api/v1`).
+    * **`service_name`**: This is an optional field used for storing credentials. You can set a descriptive name for your application (e.g., `MyHomeboxApp`, `IntegrationTool`). If not provided, it defaults to `TestHomeboxAPI`.
+
+    **Example `config.ini`:**
+
+    ```ini
+    [API]
+    base_url = [http://homebox.example.com/api/v1](http://homebox.example.com/api/v1)
+    service_name = MyAwesomeIntegration
     ```
 
 2.  **Store Credentials:**
