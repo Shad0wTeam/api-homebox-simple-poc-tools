@@ -381,6 +381,58 @@ class HomeboxAPI:
             return None
     
     @classmethod
+    def download_attachment_raw(cls, item_id, attachment_id):
+        """Download attachment bytes directly, bypassing internal request parsing logic."""
+        url = f"{cls.API_BASE_URL}/items/{item_id}/attachments/{attachment_id}"
+        headers = cls.get_headers()
+
+        try:
+            response = requests.get(url, headers=headers, stream=True, timeout=60)
+            if response.status_code == 200:
+                return response.content  # Always return raw bytes
+            else:
+                print(f"❌ Attachment download failed: {response.status_code} - {response.text}")
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Request error during attachment download: {e}")
+            return None
+
+    @classmethod    
+    def download_raw(cls, resource_type, item_id=None, subresource_id=None, stream=True, timeout=60):
+        """
+        Generic raw downloader for any subresource (attachments, labels, etc.).
+
+        Args:
+            resource_type (str): Base API path like 'items', 'items/labels', or 'items/attachments'.
+            item_id (str, optional): ID of the parent item.
+            subresource_id (str, optional): ID of the subresource (e.g. attachment_id, label_id).
+            stream (bool): Whether to stream the response.
+            timeout (int): Timeout in seconds.
+
+        Returns:
+            bytes or None: Raw response content if successful, else None.
+        """
+        endpoint = resource_type
+        if item_id:
+            endpoint += f"/{item_id}"
+        if subresource_id:
+            endpoint += f"/{subresource_id}"
+
+        url = f"{cls.API_BASE_URL}/{endpoint}"
+        headers = cls._get_headers()
+
+        try:
+            response = requests.get(url, headers=headers, stream=stream, timeout=timeout)
+            if response.status_code == 200:
+                return response.content
+            else:
+                print(f"❌ Download failed: {response.status_code} - {response.text}")
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Request error during download: {e}")
+            return None
+    
+    @classmethod
     def upload_attachment(cls, item_id, file_path, file_type, file_name):
         """Uploads an attachment to a specific item."""
         url = f"{cls.API_BASE_URL}/items/{item_id}/attachments"
@@ -551,8 +603,3 @@ class HomeboxAPI:
             cls.delete_label(label["id"], label["name"])
 
         print("✅ Cleanup complete.")
-
-
-    
-
-    
