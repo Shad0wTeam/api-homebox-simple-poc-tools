@@ -20,6 +20,7 @@ Contents:
 ══════════════════════════════════════════════════════════════════════════════
 """
 
+import mimetypes
 import os
 import platform
 import re
@@ -431,26 +432,49 @@ class HomeboxAPI:
         except requests.exceptions.RequestException as e:
             print(f"❌ Request error during download: {e}")
             return None
-    
+
     @classmethod
     def upload_attachment(cls, item_id, file_path, file_type, file_name):
         """Uploads an attachment to a specific item."""
         url = f"{cls.API_BASE_URL}/items/{item_id}/attachments"
 
-        # Supported formats: ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tiff", ".pdf"
-        with open(file_path, "rb") as file:
-            files = {
-                "file": (file_name, file, "application/octet-stream"),
-                "type": (None, file_type),
-                "name": (None, file_name),
-            }
-            response = requests.post(url, headers={"Authorization": f"Bearer {cls.login()}"}, files=files)
+        # Ensure the file exists
+        if not os.path.exists(file_path):
+            print(f"❌ upload_attachment failed: Local file not found at path: {file_path}")
+            return None
 
-        if response.status_code == 201:
-            print(f"✅ Attachment '{file_name}' uploaded successfully.")
-            return response.json()
-        else:
-            print(f"❌ Failed to upload attachment: {response.status_code} - {response.text}")
+        # Determine the MIME type using mimetypes.guess_type()
+        # guess_type returns a tuple (type, encoding). We only need the type.
+        # If it can't guess, 'mime_type' will be None.
+        guessed_mime_type, _ = mimetypes.guess_type(file_name)
+
+        # Use the guessed MIME type, or default to "application/octet-stream" if None
+        mime_type = guessed_mime_type if guessed_mime_type else "application/octet-stream"
+
+        try:
+            # Supported formats: ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tiff", ".pdf"
+            with open(file_path, "rb") as file:
+                files = {
+                    "file": (file_name, file, mime_type),
+                }
+                data = {
+                    "type": file_type,
+                    "name": file_name,
+                }
+                print(f"Attempting upload for '{file_name}' (MIME: '{mime_type}', Type: '{file_type}') for item {item_id}.")
+                response = requests.post(url, headers={"Authorization": f"Bearer {cls.login()}"}, files=files, data=data)
+
+            if response.status_code == 201:
+                print(f"✅ Attachment '{file_name}' uploaded successfully.")
+                return response.json()
+            else:
+                print(f"❌ Failed to upload attachment: {response.status_code} - {response.text}")
+                return None
+        except FileNotFoundError:
+            print(f"❌ File not found at path: {file_path} during upload attempt.")
+            return None
+        except Exception as e:
+            print(f"❌ An unexpected error occurred during upload_attachment for '{file_name}': {e}")
             return None
 
     @classmethod
