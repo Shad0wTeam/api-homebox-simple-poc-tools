@@ -89,5 +89,5 @@ else:
 
 # Note: The upload_attachment and delete_attachment methods are also in homebox_api.py
 # and can be called explicitly if needed.
-# e.g., api.upload_attachment('item-id', 'path/to/file', 'photo')
+# e.g., api.upload_attachment('item-id', 'path/to/file', 'photo', 'file-title)
 # e.g., api.delete_attachment('item-id', 'attachment-id')

@@ -177,8 +177,19 @@ class HomeboxAPI:
     
     # ---------------- API REQUEST HANDLING ----------------
     @classmethod
-    def request(cls, method, endpoint, json=None):
-        """Handles API requests with automatic token refresh."""
+    def request(cls, method, endpoint, json=None, data=None, files=None):
+        """
+        Handles API requests with automatic token refresh, supporting JSON, form data, and files.
+
+        Args:
+            method (str): HTTP method (GET, POST, PUT, PATCH, DELETE).
+            endpoint (str): API endpoint path.
+            json (dict, optional): JSON payload for the request body.
+            data (dict, optional): Dictionary of form data for the request body.
+                                   Used for application/x-www-form-urlencoded or multipart/form-data (non-file parts).
+            files (dict, optional): Dictionary of files for multipart/form-data uploads.
+                                    E.g., {"file_field_name": ("filename", file_object, "content/type")}
+        """
         url = f"{cls.API_BASE_URL}/{endpoint}"
         headers = cls.get_headers()
 
@@ -188,57 +199,90 @@ class HomeboxAPI:
             "PUT": requests.put,
             "PATCH": requests.patch,
             "DELETE": requests.delete
-        }.get(method.upper()) # Use .upper() to make method matching case-insensitive
+        }.get(method.upper())
 
         if not method_function:
             raise ValueError(f"Unsupported HTTP method: {method}")
 
+        # Prepare parameters for the requests method
+        params_for_requests = {"headers": headers}
+
+        # Logic to handle different payload types
+        if files is not None:
+            # If files are present, it's a multipart/form-data request.
+            # 'requests' handles setting Content-Type: multipart/form-data automatically.
+            params_for_requests["files"] = files
+            if data is not None:
+                # If there's also 'data', it will be included as non-file form parts
+                params_for_requests["data"] = data
+            # Do NOT include 'json' if 'files' are present, as it conflicts with multipart
+            if json is not None:
+                 print("⚠️ Warning: 'json' parameter ignored when 'files' are present for multipart request.")
+        elif json is not None:
+            # If only JSON data is provided
+            params_for_requests["json"] = json
+            # Do NOT include 'data' if 'json' is present, as it conflicts
+            if data is not None:
+                print("⚠️ Warning: 'data' parameter ignored when 'json' is present.")
+        elif data is not None:
+            # If only form data (application/x-www-form-urlencoded) is provided
+            params_for_requests["data"] = data
+
         try:
-            response = method_function(url, headers=headers, json=json)
-            response.raise_for_status() # Raise HTTPError for bad responses
+            print(f"Making {method} request to {url} with params: {params_for_requests.keys()}")
+            response = method_function(url, **params_for_requests)
+            response.raise_for_status()
 
             if response.status_code in (200, 201):
-                return response.json()
+                # Attempt to return JSON if available, otherwise raw text or True
+                if response.text and response.headers.get('Content-Type', '').startswith('application/json'):
+                    return response.json()
+                elif response.text:
+                    return response.text # Return raw text if not JSON but has content
+                else:
+                    return True # No content, but successful
             elif response.status_code == 204:
-                return True  # Successful delete/no content
-            else:
-                 # This else might be redundant due to raise_for_status, but good as a fallback
-                 print(f"⚠️ API Warning: Unexpected status code {response.status_code} for URL {url}")
-                 return None # Or raise an exception depending on desired behavior
+                return True
 
         except requests.exceptions.HTTPError as e:
-            # Handle specific HTTP errors
             if e.response.status_code == 401:
                 print("🔄 Token expired or invalid, attempting refresh...")
-                cls._TOKEN = None  # Force token refresh
+                cls._TOKEN = None
                 try:
-                     headers = cls.get_headers() # This will call login() again
-                     response = method_function(url, headers=headers, json=json)
-                     response.raise_for_status() # Check again after refresh
-                     if response.status_code in (200, 201):
-                          return response.json()
-                     elif response.status_code == 204:
-                          return True
-                     else:
-                          print(f"⚠️ API Warning after refresh: Unexpected status code {response.status_code} for URL {url}")
-                          return None
+                    # Retry with refreshed token. Re-create params for requests.
+                    headers = cls.get_headers()
+                    params_for_requests["headers"] = headers # Update headers for retry
 
+                    print(f"Retrying {method} request to {url} with refreshed token...")
+                    response = method_function(url, **params_for_requests)
+                    response.raise_for_status()
+
+                    if response.status_code in (200, 201):
+                        if response.text and response.headers.get('Content-Type', '').startswith('application/json'):
+                            return response.json()
+                        elif response.text:
+                            return response.text
+                        else:
+                            return True
+                    elif response.status_code == 204:
+                        return True
+                    else:
+                        print(f"⚠️ API Warning after refresh: Unexpected status code {response.status_code} for URL {url}")
+                        return None
                 except requests.exceptions.RequestException as refresh_e:
-                     print(f"❌ API Error after refresh: Failed to reconnect or request failed again. Error: {refresh_e}")
-                     return None
+                    print(f"❌ API Error after refresh: Failed to reconnect or request failed again. Error: {refresh_e}")
+                    return None
             else:
-                 # Handle other HTTP errors (400, 404, 500, etc.)
-                 print(f"❌ API Error {e.response.status_code} for {method} {url}: {e.response.text}")
-                 return None
-
+                print(f"❌ API Error {e.response.status_code} for {method} {url}: {e.response.text}")
+                return None
         except requests.exceptions.RequestException as e:
-             print(f"❌ API Request Failed for {method} {url}. Error: {e}")
-             return None
+            print(f"❌ API Request Failed for {method} {url}. Error: {e}")
+            return None
         except Exception as e:
-             print(f"❌ An unexpected error occurred during API request: {e}")
-             return None
+            print(f"❌ An unexpected error occurred during API request: {e}")
+            return None
 
-     # ---------------- LABEL OPERATIONS ----------------
+    # ---------------- LABEL OPERATIONS ----------------
     @classmethod
     def get_all_labels(cls):
         """Fetch all labels."""
@@ -256,8 +300,7 @@ class HomeboxAPI:
              print(f"❌ Failed to delete label: {label_name} (ID: {label_id}). Response: {success}")
              return False
 
-
-     # ---------------- ITEM OPERATIONS ----------------
+    # ---------------- ITEM OPERATIONS ----------------
     @classmethod
     def get_all_items(cls):
         """Fetch all items in the database."""
@@ -291,7 +334,6 @@ class HomeboxAPI:
              print("⚠️ No items found or failed to retrieve all items. Cannot filter archived items.")
              return []
 
-    
     # ---------------- ITEM ATTACHMENT OPERATIONS ----------------
     @classmethod
     def get_default_download_path(cls):
@@ -420,7 +462,7 @@ class HomeboxAPI:
             endpoint += f"/{subresource_id}"
 
         url = f"{cls.API_BASE_URL}/{endpoint}"
-        headers = cls._get_headers()
+        headers = cls.get_headers()
 
         try:
             response = requests.get(url, headers=headers, stream=stream, timeout=timeout)
@@ -548,8 +590,6 @@ class HomeboxAPI:
         else:
             print("❌ No response received from the API or invalid response format.")
             return None
-
-
 
     # ---------------- CLEANUP PROCESS ----------------
     @classmethod
