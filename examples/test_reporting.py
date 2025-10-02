@@ -30,7 +30,7 @@ api = HomeboxAPI()
 # --- Reporting Test Samples ---
 print("--- Reporting Tests ---")
 
-# Get Bill of Materials (⚠️ JSONDecodeError Observed Previously - May vary by Homebox version)
-print("\nFetching Bill of Materials (expecting potential JSONDecodeError)...")
+# Get Bill of Materials
+print("\nFetching Bill of Materials...")
 bill_of_material = api.request("GET", f"reporting/bill-of-materials")
 print(bill_of_material)
