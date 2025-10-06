@@ -11,13 +11,13 @@ A Python client library for interacting with the [Homebox](https://hay-kot.githu
 
 - [🚀 Quick Start](#-quick-start)
 - [✨ Features](#-features)
-- [📦 Installation](#-installation)
-- [⚙️ Setup](#️-setup)
-- [💻 Usage](#-usage)
-- [📁 Project Structure](#-project-structure)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
-- [🙏 Acknowledgements](#-acknowledgements)
+- [📦 Installation](#installation)
+- [⚙️ Setup](#️setup)
+- [💻 Usage](#usage)
+- [📁 Project Structure](#project-structure)
+- [🤝 Contributing](#contributing)
+- [📄 License](#license)
+- [🙏 Acknowledgements](#acknowledgements)
 
 ## 🚀 Quick Start
 
