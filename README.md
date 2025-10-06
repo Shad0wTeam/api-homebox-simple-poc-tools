@@ -1,23 +1,75 @@
 # Homebox API Python Client
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI Version](https://img.shields.io/pypi/v/requests.svg)](https://pypi.org/project/requests/)
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 A Python client library for interacting with the [Homebox](https://hay-kot.github.io/homebox/) inventory system API. This library provides a convenient way to authenticate and perform various operations on your Homebox data from Python scripts.
 
-## Features
+## 📋 Table of Contents
 
-- Centralized API communication logic.
-- Secure credential management using `keyring`.
-- Automatic token handling and refresh.
-- Support for common HTTP methods (GET, POST, PATCH, PUT, DELETE).
-- Convenience methods for accessing various Homebox resources:
-    - Labels
-    - Items (including by Asset ID, archived items)
-    - Item Attachments (get, download, upload, delete, update)
-    - Item Maintenance Logs
-    - Locations (including tree view)
-    - General Maintenance Logs
-    - Notifiers
-    - Reporting (Bill of Materials)
-- Helper functions for file handling (default download path, filename sanitization).
+- [🚀 Quick Start](#-quick-start)
+- [✨ Features](#-features)
+- [📦 Installation](#-installation)
+- [⚙️ Setup](#️-setup)
+- [💻 Usage](#-usage)
+- [📁 Project Structure](#-project-structure)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [🙏 Acknowledgements](#-acknowledgements)
+
+## 🚀 Quick Start
+
+Get up and running with the Homebox API Python Client in minutes:
+
+### 1. **Install Dependencies**
+```bash
+pip install requests>=2.32.0 keyring>=25.2.1
+```
+
+### 2. **Configure Your Homebox Instance**
+Create a `config.ini` file in your `includes/` directory:
+```ini
+[API]
+base_url = http://your-homebox-instance.com/api/v1
+service_name = MyHomeboxApp
+```
+
+### 3. **Start Using the API**
+```python
+from includes.homebox_api import HomeboxAPI
+
+# Initialize the client (will prompt for credentials on first run)
+api = HomeboxAPI()
+
+# Get all items
+items = api.get_all_items()
+print(f"Found {len(items)} items in your Homebox!")
+
+# Get items by location
+location_items = api.get_items_by_location("your-location-id")
+print(f"Items in location: {location_items}")
+```
+
+That's it! 🎉 You're ready to integrate with your Homebox inventory system.
+
+## ✨ Features
+
+- 🔗 **Centralized API communication logic**
+- 🔐 **Secure credential management** using `keyring`
+- 🔄 **Automatic token handling and refresh**
+- 🌐 **Support for common HTTP methods** (GET, POST, PATCH, PUT, DELETE)
+- 📚 **Convenience methods for accessing various Homebox resources:**
+  - 🏷️ Labels
+  - 📦 Items (including by Asset ID, archived items)
+  - 📎 Item Attachments (get, download, upload, delete, update)
+  - 🔧 Item Maintenance Logs
+  - 📍 Locations (including tree view)
+  - 📋 General Maintenance Logs
+  - 🔔 Notifiers
+  - 📊 Reporting (Bill of Materials)
+- 🛠️ **Helper functions** for file handling (default download path, filename sanitization)
 
 ## Installation
 
