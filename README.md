@@ -12,7 +12,7 @@ A Python client library for interacting with the [Homebox](https://hay-kot.githu
 - [🚀 Quick Start](#-quick-start)
 - [✨ Features](#-features)
 - [📦 Installation](#installation)
-- [⚙️ Setup](#️setup)
+- [⚙️ Setup](#setup)
 - [💻 Usage](#usage)
 - [📁 Project Structure](#project-structure)
 - [🤝 Contributing](#contributing)
